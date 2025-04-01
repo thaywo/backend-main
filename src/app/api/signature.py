@@ -1,10 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from fastapi.security import OAuth2PasswordBearer
-from datetime import datetime, timedelta
-from app.providers.signature import SignatureProvider
-from app.models.enums import SignatureType
-from app.schemas.schemas import SignatureRequest, SignatureResponse
+from ..providers.signature import SignatureProvider
+from ..schemas.schemas import SignatureResponse
 from typing import Optional
+from pydantic import BaseModel
 
 router = APIRouter(
     prefix="/signature",
@@ -12,51 +11,24 @@ router = APIRouter(
     responses={404: {"description": "Not found"}},
 )
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/token")
+# oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/token")
 
-@router.post("/generate", response_model=SignatureResponse)
-async def generate_signature(
-    request: SignatureRequest,
-    token: str = Depends(oauth2_scheme)
+# Add request model
+class SignatureRequest(BaseModel):
+    user_address: str
+    quest_id: str
+    chain_id: int = 1
+
+@router.post("/quest")
+async def generate_quest_signature(
+    request: SignatureRequest  # Now expects JSON body
 ):
-    """
-    Generate a signature for minting rewards after quest completion
-    
-    Required in request:
-    - user_address: Ethereum address of the user
-    - quest_id: ID of the completed quest
-    - chain_id: EVM chain ID where contract is deployed
-    - contract_address: Address of the reward contract
-    - expiry (optional): Signature expiry timestamp
-    """
     try:
-        signature_provider = SignatureProvider()
-        
-        # Optional expiry date handling
-        expiry_date = None
-        if request.expiry:
-            expiry_date = datetime.fromtimestamp(request.expiry)
-        
-        signature, expiry = signature_provider.generate_signature(
+        provider = SignatureProvider()
+        return provider.generate_quest_signature(
             user_address=request.user_address,
             quest_id=request.quest_id,
-            chain_id=request.chain_id,
-            contract_address=request.contract_address,
-            expiry=expiry_date,
-            signature_type=SignatureType.QUEST_COMPLETION
+            chain_id=request.chain_id
         )
-        
-        return {
-            "signature": signature,
-            "expiry": expiry,
-            "user_address": request.user_address,
-            "quest_id": request.quest_id,
-            "contract_address": request.contract_address,
-            "chain_id": request.chain_id
-        }
-        
     except Exception as e:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Error generating signature: {str(e)}"
-        )
+        raise HTTPException(400, detail=str(e))

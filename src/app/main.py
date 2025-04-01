@@ -43,7 +43,7 @@ app = FastAPI()  # Remove the dependencies parameter
 # Apply to all routes
 # app = FastAPI(dependencies=[Depends(get_api_key)])  # Remove this line
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/token")
+# oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/token")
 app.include_router(users_router)
 app.include_router(quests_router)
 app.include_router(points_summary_router)

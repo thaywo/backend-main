@@ -66,3 +66,11 @@ class QuestSummary(BaseModel):
 class PointsSummaryResponse(BaseModel):
     total_points: int
     quests: List[QuestSummary]       
+    
+class SignatureResponse(BaseModel):
+    signature: str
+    user_address: str
+    quest_id: str
+    chain_id: int
+    nonce: int
+    expiry: int    
