@@ -16,19 +16,19 @@ router = APIRouter(
 # Add request model
 class SignatureRequest(BaseModel):
     user_address: str
-    quest_id: str
-    chain_id: int = 1
+    token_id: int
+    chain_id: int
+    nonce: int
 
-@router.post("/quest")
-async def generate_quest_signature(
-    request: SignatureRequest  # Now expects JSON body
-):
+@router.post("/quest", response_model=dict)
+async def generate_mint_signature(request: SignatureResponse):
     try:
         provider = SignatureProvider()
-        return provider.generate_quest_signature(
+        return provider.generate_mint_signature(
             user_address=request.user_address,
-            quest_id=request.quest_id,
-            chain_id=request.chain_id
+            token_id=request.token_id,
+            chain_id=request.chain_id,
+            nonce=request.nonce
         )
     except Exception as e:
-        raise HTTPException(400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e))
